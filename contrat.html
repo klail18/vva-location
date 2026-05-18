@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contrat – Villas Vallée d'Asco</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #F7F3EC; font-family: 'DM Sans', sans-serif; }
+  </style>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script>
+    firebase.initializeApp({
+      apiKey:            "AIzaSyC-ACP702tVYw6uPds5NqYM_aiNjdJDMWE",
+      authDomain:        "vva-reservation.firebaseapp.com",
+      databaseURL:       "https://vva-reservation-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId:         "vva-reservation",
+      storageBucket:     "vva-reservation.firebasestorage.app",
+      messagingSenderId: "1097469914583",
+      appId:             "1:1097469914583:web:0f8366e2fd70671446af92"
+    });
+    const db = firebase.database();
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    var root = document.getElementById("root");
+
+    // Get ID from URL
+    var params = new URLSearchParams(window.location.search);
+    var id     = params.get("id");
+
+    if (!id) {
+      root.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px;">'
+        + '<div style="font-size:32px">❌</div>'
+        + '<div style="font-family:\'DM Sans\',sans-serif;color:#888;font-size:14px">Lien invalide ou expiré.</div>'
+        + '</div>';
+    } else {
+      // Loading state
+      root.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:12px;">'
+        + '<div style="width:36px;height:36px;border:3px solid #E5DDD0;border-top-color:#1B5E5E;border-radius:50%;animation:spin .7s linear infinite"></div>'
+        + '<div style="font-family:\'DM Sans\',sans-serif;color:#888;font-size:14px">Chargement du contrat…</div>'
+        + '<style>@keyframes spin{to{transform:rotate(360deg)}}</style>'
+        + '</div>';
+
+      db.ref("contracts/" + id).once("value", function(snap) {
+        var val = snap.val();
+        if (!val || !val.pdf) {
+          root.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px;">'
+            + '<div style="font-size:32px">❌</div>'
+            + '<div style="font-family:\'DM Sans\',sans-serif;color:#888;font-size:14px">Contrat introuvable.</div>'
+            + '</div>';
+          return;
+        }
+
+        // Show PDF embed + download button
+        root.innerHTML = ''
+          + '<div style="max-width:480px;margin:0 auto;">'
+
+          // Header
+          + '<div style="background:#1B5E5E;padding:20px;color:white;display:flex;align-items:center;gap:12px;">'
+          + '<div style="width:40px;height:40px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:\'Cormorant Garamond\',serif;font-size:16px;font-weight:700;color:white;flex-shrink:0">VVA</div>'
+          + '<div>'
+          + '<div style="font-family:\'Cormorant Garamond\',serif;font-size:18px;font-weight:600;">Villas Vallée d\'Asco</div>'
+          + '<div style="font-size:11px;opacity:.6;margin-top:2px">Contrat de location – ' + (val.clientName || "") + '</div>'
+          + '</div>'
+          + '</div>'
+
+          // Info card
+          + '<div style="padding:16px;">'
+          + '<div style="background:white;border-radius:12px;padding:14px 16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);">'
+          + '<div style="font-size:11px;font-weight:700;color:#AAA;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Document</div>'
+          + '<div style="font-size:13px;color:#444;line-height:1.9;">'
+          + '<div>👤 ' + (val.clientName || "") + '</div>'
+          + '<div>🆔 ' + id + '</div>'
+          + '</div>'
+          + '</div>'
+
+          // Download button
+          + '<a id="dlBtn" href="' + val.pdf + '" download="Contrat-VVA-' + (val.clientName||"").replace(/\s+/g,"-") + '.pdf" '
+          + 'style="display:block;width:100%;padding:14px;border-radius:10px;background:#1B5E5E;color:white;font-family:\'DM Sans\',sans-serif;font-size:15px;font-weight:600;text-align:center;text-decoration:none;margin-bottom:16px;">'
+          + '⬇️ Télécharger le contrat PDF'
+          + '</a>'
+
+          // PDF preview
+          + '<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);">'
+          + '<iframe src="' + val.pdf + '" width="100%" height="600" style="border:none;display:block;" title="Contrat"></iframe>'
+          + '</div>'
+
+          + '</div>'
+          + '</div>';
+      });
+    }
+  </script>
+</body>
+</html>
